@@ -1,65 +1,90 @@
-# Uncomment the required imports before adding the code
-
-# from django.shortcuts import render
-# from django.http import HttpResponseRedirect, HttpResponse
-# from django.contrib.auth.models import User
-# from django.shortcuts import get_object_or_404, render, redirect
-# from django.contrib.auth import logout
-# from django.contrib import messages
-# from datetime import datetime
-
 from django.http import JsonResponse
-from django.contrib.auth import login, authenticate
-import logging
-import json
+from django.contrib.auth.models import User
+from django.contrib.auth import login, logout, authenticate
 from django.views.decorators.csrf import csrf_exempt
-# from .populate import initiate
+import json
+import logging
 
-
-# Get an instance of a logger
+# Logger instance
 logger = logging.getLogger(__name__)
 
-
-# Create your views here.
-
-# Create a `login_request` view to handle sign in request
-@csrf_exempt
+# ---------------------- LOGIN VIEW ---------------------- #
+@csrf_exempt  # ⚠️ For development only; use CSRF tokens in production
 def login_user(request):
-    # Get username and password from request.POST dictionary
-    data = json.loads(request.body)
-    username = data['userName']
-    password = data['password']
-    # Try to check if provide credential can be authenticated
+    """
+    JSON login endpoint for React/JS fetch.
+    Expects POST JSON:
+      { "username": "...", "password": "..." }
+    Returns:
+      { "userName": "...", "status": "Authenticated" | "Failed" }
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        username = data.get("username") or data.get("userName")
+        password = data.get("password")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    if not username or not password:
+        return JsonResponse({"error": "Username and password required"}, status=400)
+
     user = authenticate(username=username, password=password)
-    data = {"userName": username}
-    if user is not None:
-        # If user is valid, call login method to login current user
+    if user:
         login(request, user)
-        data = {"userName": username, "status": "Authenticated"}
-    return JsonResponse(data)
+        logger.info(f"User '{username}' logged in successfully.")
+        return JsonResponse({"userName": username, "status": "Authenticated"})
+    else:
+        logger.warning(f"Failed login attempt for username '{username}'.")
+        return JsonResponse({"userName": username, "status": "Failed"}, status=401)
 
-# Create a `logout_request` view to handle sign out request
-# def logout_request(request):
-# ...
 
-# Create a `registration` view to handle sign up request
-# @csrf_exempt
-# def registration(request):
-# ...
+# ---------------------- LOGOUT VIEW ---------------------- #
+@csrf_exempt
+def logout_request(request):
+    """
+    Logs out the current user and returns JSON status.
+    GET or POST is accepted.
+    """
+    logout(request)
+    logger.info("User logged out.")
+    return JsonResponse({"status": "Logged Out"})
 
-# # Update the `get_dealerships` view to render the index page with
-# a list of dealerships
-# def get_dealerships(request):
-# ...
 
-# Create a `get_dealer_reviews` view to render the reviews of a dealer
-# def get_dealer_reviews(request,dealer_id):
-# ...
+# ---------------------- REGISTRATION VIEW ---------------------- #
+@csrf_exempt
+def registration(request):
+    """
+    Register a new user (JSON only).
+    Expects POST JSON:
+      { "username": "...", "password": "...", "email": "..." (optional) }
+    Returns:
+      { "userName": "...", "status": "Registered" }
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST method is allowed"}, status=405)
 
-# Create a `get_dealer_details` view to render the dealer details
-# def get_dealer_details(request, dealer_id):
-# ...
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-# Create a `add_review` view to submit a review
-# def add_review(request):
-# ...
+    if not username or not password:
+        return JsonResponse({"error": "Username and password are required"}, status=400)
+
+    if User.objects.filter(username=username).exists():
+        return JsonResponse({"error": "Username already exists"}, status=400)
+
+    user = User.objects.create_user(
+        username=username,
+        password=password,
+        email=email if email else ""
+    )
+
+    logger.info(f"New user registered: {username}")
+    return JsonResponse({"userName": user.username, "status": "Registered"})
