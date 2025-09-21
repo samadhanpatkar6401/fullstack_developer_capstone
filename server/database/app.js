@@ -27,7 +27,7 @@ try {
   console.error('Error seeding database:', error);
 }
 
-// Home route
+// ✅ Home route
 app.get('/', async (req, res) => {
   res.send("Welcome to the Mongoose API");
 });
@@ -42,10 +42,11 @@ app.get('/fetchReviews', async (req, res) => {
   }
 });
 
-// ✅ Fetch reviews by dealer
+// ✅ Fetch reviews by dealer (FIXED: cast ID to Number)
 app.get('/fetchReviews/dealer/:id', async (req, res) => {
   try {
-    const documents = await Reviews.find({ dealership: req.params.id });
+    const dealerId = parseInt(req.params.id, 10); // ✅ cast to Number
+    const documents = await Reviews.find({ dealership: dealerId });
     res.json(documents);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching documents' });
@@ -81,7 +82,7 @@ app.get('/fetchDealers/:state', async (req, res) => {
 // ✅ Fetch dealer by ID
 app.get('/fetchDealer/:id', async (req, res) => {
   try {
-    const dealerId = parseInt(req.params.id); // dealer IDs are integers in JSON
+    const dealerId = parseInt(req.params.id, 10); // ✅ cast to Number
     const dealer = await Dealerships.findOne({ id: dealerId });
     if (!dealer) {
       return res.status(404).json({ message: "Dealer not found" });
@@ -97,18 +98,18 @@ app.get('/fetchDealer/:id', async (req, res) => {
 app.post('/insert_review', express.raw({ type: '*/*' }), async (req, res) => {
   const data = JSON.parse(req.body);
   const documents = await Reviews.find().sort({ id: -1 });
-  let new_id = documents[0]['id'] + 1;
+  let new_id = documents[0] ? documents[0]['id'] + 1 : 1;
 
   const review = new Reviews({
-    "id": new_id,
-    "name": data['name'],
-    "dealership": data['dealership'],
-    "review": data['review'],
-    "purchase": data['purchase'],
-    "purchase_date": data['purchase_date'],
-    "car_make": data['car_make'],
-    "car_model": data['car_model'],
-    "car_year": data['car_year'],
+    id: new_id,
+    name: data['name'],
+    dealership: data['dealership'],
+    review: data['review'],
+    purchase: data['purchase'],
+    purchase_date: data['purchase_date'],
+    car_make: data['car_make'],
+    car_model: data['car_model'],
+    car_year: data['car_year'],
   });
 
   try {
