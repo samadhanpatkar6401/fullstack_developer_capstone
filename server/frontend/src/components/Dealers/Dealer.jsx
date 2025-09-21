@@ -20,9 +20,9 @@ const Dealer = () => {
   let root_url = curr_url.substring(0,curr_url.indexOf("dealer"));
   let params = useParams();
   let id =params.id;
-  let dealer_url = root_url+`djangoapp/dealer/${id}`;
-  let reviews_url = root_url+`djangoapp/reviews/dealer/${id}`;
-  let post_review = root_url+`postreview/${id}`;
+  let dealer_url = root_url+`djangoapp/dealer/${id}/`;
+  let reviews_url = root_url+`djangoapp/reviews/dealer/${id}/`;
+  let post_review = root_url+`postreview/${id}/`;
   
   const get_dealer = async ()=>{
     const res = await fetch(dealer_url, {
@@ -36,20 +36,21 @@ const Dealer = () => {
     }
   }
 
-  const get_reviews = async ()=>{
-    const res = await fetch(reviews_url, {
-      method: "GET"
-    });
+  const get_reviews = async () => {
+  try {
+    const res = await fetch(reviews_url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const retobj = await res.json();
-    
-    if(retobj.status === 200) {
-      if(retobj.reviews.length > 0){
-        setReviews(retobj.reviews)
-      } else {
-        setUnreviewed(true);
-      }
+    if (retobj.status === 200) {
+      setReviews(retobj.reviews || []);
+      setUnreviewed((retobj.reviews || []).length === 0);
     }
+  } catch (err) {
+    console.error("Review fetch failed:", err);
+    setUnreviewed(true);   // gracefully show “No reviews”
   }
+};
+
 
   const senti_icon = (sentiment)=>{
     let icon = sentiment === "positive"?positive_icon:sentiment==="negative"?negative_icon:neutral_icon;

@@ -40,7 +40,7 @@ def get_cars(request):
 
 
 # ---------------------- LOGIN VIEW ---------------------- #
-@csrf_exempt  # ⚠️ For development only; use CSRF tokens in production
+  # ⚠️ For development only; use CSRF tokens in production
 def login_user(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST method is allowed"}, status=405)
@@ -112,12 +112,12 @@ def get_dealerships(request, state="All"):
     return JsonResponse({"status":200,"dealers":dealerships})
 
 def get_dealer_details(request, dealer_id):
-    if(dealer_id):
-        endpoint = "/fetchDealer/"+str(dealer_id)
+    if dealer_id:
+        endpoint = f"/fetchDealer/{dealer_id}"
         dealership = get_request(endpoint)
-        return JsonResponse({"status":200,"dealer":dealership})
-    else:
-        return JsonResponse({"status":400,"message":"Bad Request"})
+        return JsonResponse({"status":200, "dealer":[dealership]})
+    return JsonResponse({"status":400, "message":"Bad Request"})
+
 
 def get_dealer_reviews(request, dealer_id):
     # if dealer id has been provided
