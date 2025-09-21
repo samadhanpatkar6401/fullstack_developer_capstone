@@ -5,19 +5,42 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
 
+# ✅ NEW IMPORTS for Cars API
+from .models import CarMake, CarModel        # <-- First task
+from .populate import initiate               # <-- If using auto-population
+
 # Logger instance
 logger = logging.getLogger(__name__)
+
+# ---------------------- FIRST TASK: GET CARS ---------------------- #
+def get_cars(request):
+    """
+    Returns list of car makes & models.
+    - If CarMake is empty, calls populate.initiate() to add default data.
+    Response format:
+    {
+      "CarModels": [
+        {"CarModel": "Pathfinder", "CarMake": "NISSAN"},
+        {"CarModel": "A-Class", "CarMake": "Mercedes"},
+        ...
+      ]
+    }
+    """
+    count = CarMake.objects.count()
+    if count == 0:
+        initiate()  # Populate initial data if empty
+
+    car_models = CarModel.objects.select_related("car_make")
+    cars = []
+    for cm in car_models:
+        cars.append({"CarModel": cm.name, "CarMake": cm.car_make.name})
+
+    return JsonResponse({"CarModels": cars})
+
 
 # ---------------------- LOGIN VIEW ---------------------- #
 @csrf_exempt  # ⚠️ For development only; use CSRF tokens in production
 def login_user(request):
-    """
-    JSON login endpoint for React/JS fetch.
-    Expects POST JSON:
-      { "username": "...", "password": "..." }
-    Returns:
-      { "userName": "...", "status": "Authenticated" | "Failed" }
-    """
     if request.method != "POST":
         return JsonResponse({"error": "Only POST method is allowed"}, status=405)
 
@@ -44,10 +67,6 @@ def login_user(request):
 # ---------------------- LOGOUT VIEW ---------------------- #
 @csrf_exempt
 def logout_request(request):
-    """
-    Logs out the current user and returns JSON status.
-    GET or POST is accepted.
-    """
     logout(request)
     logger.info("User logged out.")
     return JsonResponse({"status": "Logged Out"})
@@ -56,13 +75,6 @@ def logout_request(request):
 # ---------------------- REGISTRATION VIEW ---------------------- #
 @csrf_exempt
 def registration(request):
-    """
-    Register a new user (JSON only).
-    Expects POST JSON:
-      { "username": "...", "password": "...", "email": "..." (optional) }
-    Returns:
-      { "userName": "...", "status": "Registered" }
-    """
     if request.method != "POST":
         return JsonResponse({"error": "Only POST method is allowed"}, status=405)
 
