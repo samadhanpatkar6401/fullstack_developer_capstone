@@ -119,18 +119,32 @@ def get_dealer_details(request, dealer_id):
     return JsonResponse({"status":400, "message":"Bad Request"})
 
 
+# in djangoapp/views.py
+
 def get_dealer_reviews(request, dealer_id):
-    # if dealer id has been provided
-    if(dealer_id):
-        endpoint = "/fetchReviews/dealer/"+str(dealer_id)
+    if dealer_id:
+        endpoint = "/fetchReviews/dealer/" + str(dealer_id)
         reviews = get_request(endpoint)
+
+        # If get_request fails and returns None, handle it.
+        if reviews is None:
+            return JsonResponse({"status": 500, "message": "Failed to fetch reviews from external service."})
+
         for review_detail in reviews:
-            response = analyze_review_sentiments(review_detail['review'])
-            print(response)
-            review_detail['sentiment'] = response['sentiment']
-        return JsonResponse({"status":200,"reviews":reviews})
+            # Analyze sentiment but prepare for failure
+            response = analyze_review_sentiments(review_detail.get('review', ''))
+
+            # ✅ ADD THIS CHECK
+            # If the sentiment analysis failed (response is None),
+            # assign a default value instead of crashing.
+            if response:
+                review_detail['sentiment'] = response.get('sentiment', 'neutral')
+            else:
+                review_detail['sentiment'] = 'neutral'  # Default to neutral on error
+
+        return JsonResponse({"status": 200, "reviews": reviews})
     else:
-        return JsonResponse({"status":400,"message":"Bad Request"})
+        return JsonResponse({"status": 400, "message": "Bad Request"})
 
 def add_review(request):
     if(request.user.is_anonymous == False):
