@@ -11,7 +11,7 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name="Home.html")),
     path('about/', TemplateView.as_view(template_name="About.html")),
     path('contact/', TemplateView.as_view(template_name="Contact.html")),
-
+    path('', include('djangoapp.urls')),
     # Frontend React login page (GET only)
     path('login/', TemplateView.as_view(template_name="index.html")),
     path('register/', TemplateView.as_view(template_name="index.html")),
