@@ -36,7 +36,10 @@ def get_cars(request):
 @csrf_exempt
 def login_user(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+        return JsonResponse(
+            {"error": "Only POST method is allowed"},
+            status=405,
+        )
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -47,20 +50,26 @@ def login_user(request):
 
     if not username or not password:
         return JsonResponse(
-            {"error": "Username and password required"}, status=400
+            {"error": "Username and password required"},
+            status=400,
         )
 
     user = authenticate(username=username, password=password)
     if user:
         login(request, user)
         logger.info("User '%s' logged in successfully.", username)
-        return JsonResponse({
-            "userName": username,
-            "status": "Authenticated"
-        })
+        return JsonResponse(
+            {
+                "userName": username,
+                "status": "Authenticated",
+            }
+        )
 
     logger.warning("Failed login attempt for username '%s'.", username)
-    return JsonResponse({"userName": username, "status": "Failed"}, status=401)
+    return JsonResponse(
+        {"userName": username, "status": "Failed"},
+        status=401,
+    )
 
 
 # ---------------------- AUTH: LOGOUT ---------------------- #
@@ -75,7 +84,10 @@ def logout_request(request):
 @csrf_exempt
 def registration(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+        return JsonResponse(
+            {"error": "Only POST method is allowed"},
+            status=405,
+        )
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -87,17 +99,25 @@ def registration(request):
 
     if not username or not password:
         return JsonResponse(
-            {"error": "Username and password are required"}, status=400
+            {"error": "Username and password are required"},
+            status=400,
         )
 
     if User.objects.filter(username=username).exists():
-        return JsonResponse({"error": "Username already exists"}, status=400)
+        return JsonResponse(
+            {"error": "Username already exists"},
+            status=400,
+        )
 
     user = User.objects.create_user(
-        username=username, password=password, email=email or ""
+        username=username,
+        password=password,
+        email=email or "",
     )
     logger.info("New user registered: %s", username)
-    return JsonResponse({"userName": user.username, "status": "Registered"})
+    return JsonResponse(
+        {"userName": user.username, "status": "Registered"}
+    )
 
 
 # ---------------------- DEALERSHIPS ---------------------- #
@@ -114,7 +134,9 @@ def get_dealer_details(request, dealer_id):
     if dealer_id:
         endpoint = f"/fetchDealer/{dealer_id}"
         dealership = get_request(endpoint)
-        return JsonResponse({"status": 200, "dealer": [dealership]})
+        return JsonResponse(
+            {"status": 200, "dealer": [dealership]}
+        )
     return JsonResponse({"status": 400, "message": "Bad Request"})
 
 
@@ -127,7 +149,10 @@ def get_dealer_reviews(request, dealer_id):
             return JsonResponse(
                 {
                     "status": 500,
-                    "message": "Failed to fetch reviews from external service.",
+                    "message": (
+                        "Failed to fetch reviews from "
+                        "external service."
+                    ),
                 }
             )
 
@@ -135,7 +160,6 @@ def get_dealer_reviews(request, dealer_id):
             response = analyze_review_sentiments(
                 review_detail.get("review", "")
             )
-            # Use a standard if/else block for clarity and line length
             if response:
                 sentiment = response.get("sentiment", "neutral")
             else:
@@ -143,6 +167,7 @@ def get_dealer_reviews(request, dealer_id):
             review_detail["sentiment"] = sentiment
 
         return JsonResponse({"status": 200, "reviews": reviews})
+
     return JsonResponse({"status": 400, "message": "Bad Request"})
 
 
@@ -157,8 +182,6 @@ def add_review(request):
         except Exception as exc:  # noqa: BLE001
             logger.error("Error posting review: %s", exc)
             return JsonResponse(
-                {"status": 401, "message": "Error in posting review"}
+                {"status": 401, "message": "Error in posting review"},
             )
-    else:
-        return JsonResponse({"status": 403, "message": "Unauthorized"})
-        
+    return JsonResponse({"status": 403, "message": "Unauthorized"})
