@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
                     "type",
                     models.CharField(
                         choices=[
-                            ("SEDAN", "Sedan"),
+                            ("SEDN", "Sedan"),
                             ("SUV", "SUV"),
                             ("WAGON", "Wagon"),
                             ("COUPE", "Coupe"),
