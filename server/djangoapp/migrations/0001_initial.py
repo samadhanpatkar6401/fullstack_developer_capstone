@@ -9,87 +9,72 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='CarMake',
+            name="CarMake",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID'
-                    )
+                        verbose_name="ID",
+                    ),
                 ),
-                ('name', models.CharField(max_length=100)),
-                ('description', models.TextField()),
-                (
-                    'country',
-                    models.CharField(
-                        blank=True,
-                        max_length=100,
-                        null=True
-                    )
-                ),
-                (
-                    'founded_year',
-                    models.IntegerField(
-                        blank=True,
-                        null=True
-                    )
-                ),
+                ("name", models.CharField(max_length=100)),
+                ("description", models.TextField()),
+                ("country", models.CharField(blank=True, max_length=100, null=True)),
+                ("founded_year", models.IntegerField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
-            name='CarModel',
+            name="CarModel",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID'
-                    )
+                        verbose_name="ID",
+                    ),
                 ),
-                ('name', models.CharField(max_length=100)),
+                ("name", models.CharField(max_length=100)),
                 (
-                    'type',
+                    "type",
                     models.CharField(
                         choices=[
-                            ('SEDAN', 'Sedan'),
-                            ('SUV', 'SUV'),
-                            ('WAGON', 'Wagon'),
-                            ('COUPE', 'Coupe'),
-                            ('TRUCK', 'Truck')
+                            ("SEDAN", "Sedan"),
+                            ("SUV", "SUV"),
+                            ("WAGON", "Wagon"),
+                            ("COUPE", "Coupe"),
+                            ("TRUCK", "Truck"),
                         ],
-                        default='SUV',
-                        max_length=10
-                    )
+                        default="SUV",
+                        max_length=10,
+                    ),
                 ),
                 (
-                    'year',
+                    "year",
                     models.IntegerField(
                         default=2025,
                         validators=[
                             django.core.validators.MinValueValidator(2015),
-                            django.core.validators.MaxValueValidator(2023)
-                        ]
-                    )
+                            django.core.validators.MaxValueValidator(2023),
+                        ],
+                    ),
                 ),
-                ('dealer_id', models.IntegerField(default=0)),
+                ("dealer_id", models.IntegerField(default=0)),
                 (
-                    'car_make',
+                    "car_make",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='djangoapp.carmake'
-                    )
+                        to="djangoapp.carmake",
+                    ),
                 ),
             ],
         ),
     ]
-

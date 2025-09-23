@@ -7,10 +7,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
-
     # Backend APIs
     path("djangoapp/", include("djangoapp.urls")),
-
     # Frontend / React routes
     path("", TemplateView.as_view(template_name="Home.html")),
     path("about/", TemplateView.as_view(template_name="About.html")),
@@ -30,11 +28,5 @@ urlpatterns = [
 
 # Serve static & media files during development
 if settings.DEBUG:
-    urlpatterns += static(
-        settings.STATIC_URL, document_root=settings.STATIC_ROOT
-    )
-    urlpatterns += static(
-        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
-    )
-    
-    
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

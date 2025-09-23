@@ -1,10 +1,10 @@
 # Uncomment the following imports before adding the Model code
 from django.db import models
-from django.utils.timezone import now
 from django.core.validators import MaxValueValidator, MinValueValidator
 import datetime  # To dynamically set the current year if needed
 
 # Create your models here.
+
 
 # Car Make model
 class CarMake(models.Model):
@@ -26,19 +26,19 @@ class CarModel(models.Model):
 
     # Limited choices for car type
     CAR_TYPES = [
-        ('SEDAN', 'Sedan'),
-        ('SUV', 'SUV'),
-        ('WAGON', 'Wagon'),
-        ('COUPE', 'Coupe'),
-        ('TRUCK', 'Truck'),
+        ("SEDAN", "Sedan"),
+        ("SUV", "SUV"),
+        ("WAGON", "Wagon"),
+        ("COUPE", "Coupe"),
+        ("TRUCK", "Truck"),
     ]
-    type = models.CharField(max_length=10, choices=CAR_TYPES, default='SUV')
+    type = models.CharField(max_length=10, choices=CAR_TYPES, default="SUV")
 
     # Year between 2015 and 2023 (or current year)
     current_year = datetime.datetime.now().year
     year = models.IntegerField(
         validators=[MinValueValidator(2015), MaxValueValidator(2023)],
-        default=current_year
+        default=current_year,
     )
 
     # Optional: Dealer ID to link to external dealer database
