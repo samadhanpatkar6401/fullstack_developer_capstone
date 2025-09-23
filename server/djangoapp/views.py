@@ -4,21 +4,24 @@ from django.contrib.auth import login, logout, authenticate
 from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
+
+# External API helpers
 from .restapis import get_request, analyze_review_sentiments, post_review
 
-# ✅ NEW IMPORTS for Cars API
-from .models import CarMake, CarModel        # <-- First task
-from .populate import initiate               # <-- If using auto-population
+# Models for Cars API
+from .models import CarMake, CarModel
+from .populate import initiate   # Used to auto-populate car data if empty
 
-# Logger instance
+# Logger
 logger = logging.getLogger(__name__)
 
-# ---------------------- FIRST TASK: GET CARS ---------------------- #
+
+# ---------------------- CARS API ---------------------- #
 def get_cars(request):
     """
     Returns list of car makes & models.
-    - If CarMake is empty, calls populate.initiate() to add default data.
-    Response format:
+    If CarMake is empty, populate it with default data.
+    Response:
     {
       "CarModels": [
         {"CarModel": "Pathfinder", "CarMake": "NISSAN"},
@@ -27,20 +30,16 @@ def get_cars(request):
       ]
     }
     """
-    count = CarMake.objects.count()
-    if count == 0:
-        initiate()  # Populate initial data if empty
+    if CarMake.objects.count() == 0:
+        initiate()
 
     car_models = CarModel.objects.select_related("car_make")
-    cars = []
-    for cm in car_models:
-        cars.append({"CarModel": cm.name, "CarMake": cm.car_make.name})
-
+    cars = [{"CarModel": cm.name, "CarMake": cm.car_make.name} for cm in car_models]
     return JsonResponse({"CarModels": cars})
 
 
-# ---------------------- LOGIN VIEW ---------------------- #
-  # ⚠️ For development only; use CSRF tokens in production
+# ---------------------- AUTH: LOGIN ---------------------- #
+@csrf_exempt   # ⚠️ Use CSRF tokens in production
 def login_user(request):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST method is allowed"}, status=405)
@@ -65,7 +64,7 @@ def login_user(request):
         return JsonResponse({"userName": username, "status": "Failed"}, status=401)
 
 
-# ---------------------- LOGOUT VIEW ---------------------- #
+# ---------------------- AUTH: LOGOUT ---------------------- #
 @csrf_exempt
 def logout_request(request):
     logout(request)
@@ -73,7 +72,7 @@ def logout_request(request):
     return JsonResponse({"status": "Logged Out"})
 
 
-# ---------------------- REGISTRATION VIEW ---------------------- #
+# ---------------------- AUTH: REGISTRATION ---------------------- #
 @csrf_exempt
 def registration(request):
     if request.method != "POST":
@@ -98,61 +97,65 @@ def registration(request):
         password=password,
         email=email if email else ""
     )
-
     logger.info(f"New user registered: {username}")
     return JsonResponse({"userName": user.username, "status": "Registered"})
 
-#Update the `get_dealerships` render list of dealerships all by default, particular state if state is passed
+
+# ---------------------- DEALERSHIPS ---------------------- #
 def get_dealerships(request, state="All"):
-    if(state == "All"):
-        endpoint = "/fetchDealers"
-    else:
-        endpoint = "/fetchDealers/"+state
+    """
+    Returns list of dealerships.
+    - state="All" -> fetch all dealers
+    - state="XX"  -> fetch dealers for a given state code
+    """
+    endpoint = "/fetchDealers" if state == "All" else f"/fetchDealers/{state}"
     dealerships = get_request(endpoint)
-    return JsonResponse({"status":200,"dealers":dealerships})
+    return JsonResponse({"status": 200, "dealers": dealerships})
+
 
 def get_dealer_details(request, dealer_id):
+    """
+    Return details for a specific dealer.
+    """
     if dealer_id:
         endpoint = f"/fetchDealer/{dealer_id}"
         dealership = get_request(endpoint)
-        return JsonResponse({"status":200, "dealer":[dealership]})
-    return JsonResponse({"status":400, "message":"Bad Request"})
+        return JsonResponse({"status": 200, "dealer": [dealership]})
+    return JsonResponse({"status": 400, "message": "Bad Request"})
 
-
-# in djangoapp/views.py
 
 def get_dealer_reviews(request, dealer_id):
+    """
+    Fetch reviews for a specific dealer and analyze sentiment.
+    """
     if dealer_id:
-        endpoint = "/fetchReviews/dealer/" + str(dealer_id)
+        endpoint = f"/fetchReviews/dealer/{dealer_id}"
         reviews = get_request(endpoint)
 
-        # If get_request fails and returns None, handle it.
         if reviews is None:
             return JsonResponse({"status": 500, "message": "Failed to fetch reviews from external service."})
 
         for review_detail in reviews:
-            # Analyze sentiment but prepare for failure
-            response = analyze_review_sentiments(review_detail.get('review', ''))
-
-            # ✅ ADD THIS CHECK
-            # If the sentiment analysis failed (response is None),
-            # assign a default value instead of crashing.
-            if response:
-                review_detail['sentiment'] = response.get('sentiment', 'neutral')
-            else:
-                review_detail['sentiment'] = 'neutral'  # Default to neutral on error
+            response = analyze_review_sentiments(review_detail.get("review", ""))
+            review_detail["sentiment"] = response.get("sentiment", "neutral") if response else "neutral"
 
         return JsonResponse({"status": 200, "reviews": reviews})
-    else:
-        return JsonResponse({"status": 400, "message": "Bad Request"})
+    return JsonResponse({"status": 400, "message": "Bad Request"})
 
+
+# ---------------------- ADD REVIEW ---------------------- #
+@csrf_exempt
 def add_review(request):
-    if(request.user.is_anonymous == False):
-        data = json.loads(request.body)
+    """
+    Add a review for a dealer. User must be authenticated.
+    """
+    if not request.user.is_anonymous:
         try:
-            response = post_review(data)
-            return JsonResponse({"status":200})
-        except:
-            return JsonResponse({"status":401,"message":"Error in posting review"})
+            data = json.loads(request.body.decode("utf-8"))
+            post_review(data)
+            return JsonResponse({"status": 200})
+        except Exception as e:
+            logger.error(f"Error posting review: {e}")
+            return JsonResponse({"status": 401, "message": "Error in posting review"})
     else:
-        return JsonResponse({"status":403,"message":"Unauthorized"})
+        return JsonResponse({"status": 403, "message": "Unauthorized"})

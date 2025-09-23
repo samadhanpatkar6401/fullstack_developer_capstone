@@ -14,20 +14,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -------------------------------------------------------------
 # Security
 # -------------------------------------------------------------
-SECRET_KEY = 'django-insecure-ccow$tz_=9%dxu4(0%^(z%nx32#s@(zt9$ih@)5l54yny)wm-0'
+SECRET_KEY = (
+    "django-insecure-ccow$tz_=9%dxu4(0%^(z%nx32#s@(zt9$ih@)5l54yny)wm-0"
+)
 DEBUG = True
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "u31241596-8000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai",
-    "u31241596-8000.theianext-0-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai",
+    (
+        "u31241596-8000.theiadockernext-0-labs-prod-"
+        "theiak8s-4-tor01.proxy.cognitiveclass.ai"
+    ),
+    (
+        "u31241596-8000.theianext-0-labs-prod-misc-tools-"
+        "us-east-0.proxy.cognitiveclass.ai"
+    ),
 ]
 
-
 CSRF_TRUSTED_ORIGINS = [
-    "https://u31241596-8000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai",
-    "https://u31241596-8000.theianext-0-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai",
+    (
+        "https://u31241596-8000.theiadockernext-0-labs-prod-"
+        "theiak8s-4-tor01.proxy.cognitiveclass.ai"
+    ),
+    (
+        "https://u31241596-8000.theianext-0-labs-prod-misc-tools-"
+        "us-east-0.proxy.cognitiveclass.ai"
+    ),
 ]
 
 REST_FRAMEWORK = {
@@ -54,6 +67,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -101,10 +115,30 @@ DATABASES = {
 # Password Validation
 # -------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "UserAttributeSimilarityValidator"
+        )
+    },
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "MinimumLengthValidator"
+        )
+    },
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "CommonPasswordValidator"
+        )
+    },
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "NumericPasswordValidator"
+        )
+    },
 ]
 
 # -------------------------------------------------------------
@@ -119,21 +153,18 @@ USE_TZ = True
 # -------------------------------------------------------------
 # Static & Media Files
 # -------------------------------------------------------------
-# URL prefix for static files
 STATIC_URL = "/static/"
 
 # Location where collectstatic will copy files
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Additional directories Django will look for static files
-# Include React build output so manifest.json and bundled JS are served
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "frontend/build"),        # <-- React build root
-    os.path.join(BASE_DIR, "frontend/build/static"), # <-- JS/CSS assets
-    os.path.join(BASE_DIR, "frontend/static"),       # <-- Optional extra static files
+    os.path.join(BASE_DIR, "frontend/build"),        # React build root
+    os.path.join(BASE_DIR, "frontend/build/static"), # JS/CSS assets
+    os.path.join(BASE_DIR, "frontend/static"),       # Optional extra static files
 ]
 
-# Media files (if any uploads)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
