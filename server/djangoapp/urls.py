@@ -29,7 +29,7 @@ urlpatterns = [
     path(
         route='reviews/dealer/<int:dealer_id>/',
         view=views.get_dealer_reviews,
-        name='dealer_reviews'  # Corrected name for clarity
+        name='dealer_reviews'
     ),
     path(
         route='add_review',

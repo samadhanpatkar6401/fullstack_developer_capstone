@@ -12,28 +12,19 @@ sentiment_analyzer_url = os.getenv(
 
 
 def get_request(endpoint, **kwargs):
-    """
-    Makes a GET request to the specified endpoint.
-    kwargs are passed as URL parameters.
-    """
     request_url = backend_url + endpoint
     print(f"GET from {request_url} with params {kwargs}")
 
     try:
-        # Pass kwargs directly to the params argument of requests.get
         response = requests.get(request_url, params=kwargs, timeout=5)
-        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+        response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        # Handle specific network/request errors
         print(f"Network exception occurred: {e}")
         return None
 
 
 def analyze_review_sentiments(text):
-    """
-    Analyzes the sentiment of the given text.
-    """
     request_url = sentiment_analyzer_url + "analyze/" + text
     try:
         response = requests.get(request_url, timeout=5)
@@ -48,9 +39,6 @@ def analyze_review_sentiments(text):
 
 
 def post_review(data_dict):
-    """
-    Posts a review to the backend service.
-    """
     request_url = backend_url + "/insert_review"
     try:
         response = requests.post(request_url, json=data_dict, timeout=5)
