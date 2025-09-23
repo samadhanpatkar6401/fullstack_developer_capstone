@@ -33,7 +33,8 @@ def get_cars(request):
         initiate()
 
     car_models = CarModel.objects.select_related("car_make")
-    cars = [{"CarModel": cm.name, "CarMake": cm.car_make.name} for cm in car_models]
+    cars = [{"CarModel": cm.name, "CarMake": cm.car_make.name} 
+    for cm in car_models]
     return JsonResponse({"CarModels": cars})
 
 
@@ -41,7 +42,8 @@ def get_cars(request):
 @csrf_exempt  # ⚠️ Use CSRF tokens in production
 def login_user(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+        return JsonResponse({"error": "Only POST method is allowed"}, 
+        status=405)
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -51,16 +53,19 @@ def login_user(request):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     if not username or not password:
-        return JsonResponse({"error": "Username and password required"}, status=400)
+        return JsonResponse({"error": "Username and password required"}, 
+        status=400)
 
     user = authenticate(username=username, password=password)
     if user:
         login(request, user)
         logger.info("User '%s' logged in successfully.", username)
-        return JsonResponse({"userName": username, "status": "Authenticated"})
+        return JsonResponse({"userName": username, "status": 
+			     "Authenticated"})
 
     logger.warning("Failed login attempt for username '%s'.", username)
-    return JsonResponse({"userName": username, "status": "Failed"}, status=401)
+    return JsonResponse({"userName": username, "status": "Failed"}, 
+			  status=401)
 
 
 # ---------------------- AUTH: LOGOUT ---------------------- #
@@ -75,7 +80,8 @@ def logout_request(request):
 @csrf_exempt
 def registration(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+        return JsonResponse({"error": "Only POST method is allowed"}, 
+        status=405)
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -86,7 +92,8 @@ def registration(request):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     if not username or not password:
-        return JsonResponse({"error": "Username and password are required"}, status=400)
+        return JsonResponse({"error": "Username and password are required"}, 
+        status=400)
 
     if User.objects.filter(username=username).exists():
         return JsonResponse({"error": "Username already exists"}, status=400)
@@ -134,14 +141,17 @@ def get_dealer_reviews(request, dealer_id):
             return JsonResponse(
                 {
                     "status": 500,
-                    "message": "Failed to fetch reviews from external service.",
+                    "message": "Failed to fetch reviews from external 
+				service.",
                 }
             )
 
         for review_detail in reviews:
-            response = analyze_review_sentiments(review_detail.get("review", ""))
+            response = analyze_review_sentiments(review_detail.get("review", 
+			""))
             review_detail["sentiment"] = (
-                response.get("sentiment", "neutral") if response else "neutral"
+                response.get("sentiment", "neutral") 
+		if response else "neutral"
             )
 
         return JsonResponse({"status": 200, "reviews": reviews})
@@ -161,5 +171,6 @@ def add_review(request):
             return JsonResponse({"status": 200})
         except Exception as exc:  # noqa: BLE001
             logger.error("Error posting review: %s", exc)
-            return JsonResponse({"status": 401, "message": "Error in posting review"})
+            return JsonResponse({"status": 401, "message": "Error in 
+				  posting review"})
     return JsonResponse({"status": 403, "message": "Unauthorized"})
