@@ -1,4 +1,3 @@
-# Uncomment the imports below before you add the function code
 import requests
 import os
 from dotenv import load_dotenv
@@ -11,39 +10,54 @@ sentiment_analyzer_url = os.getenv(
     'sentiment_analyzer_url',
     default="http://localhost:5050/")
 
+
 def get_request(endpoint, **kwargs):
-    params = ""
-    if(kwargs):
-        for key,value in kwargs.items():
-            params=params+key+"="+value+"&"
+    """
+    Makes a GET request to the specified endpoint.
+    kwargs are passed as URL parameters.
+    """
+    request_url = backend_url + endpoint
+    print(f"GET from {request_url} with params {kwargs}")
 
-    request_url = backend_url+endpoint+"?"+params
-
-    print("GET from {} ".format(request_url))
     try:
-        # Call get method of requests library with URL and parameters
-        response = requests.get(request_url)
+        # Pass kwargs directly to the params argument of requests.get
+        response = requests.get(request_url, params=kwargs, timeout=5)
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
         return response.json()
-    except:
-        # If any error occurs
-        print("Network exception occurred")
-   
+    except requests.exceptions.RequestException as e:
+        # Handle specific network/request errors
+        print(f"Network exception occurred: {e}")
+        return None
+
 
 def analyze_review_sentiments(text):
-    request_url = sentiment_analyzer_url+"analyze/"+text
+    """
+    Analyzes the sentiment of the given text.
+    """
+    request_url = sentiment_analyzer_url + "analyze/" + text
     try:
-        # Call get method of requests library with URL and parameters
-        response = requests.get(request_url)
+        response = requests.get(request_url, timeout=5)
+        response.raise_for_status()
         return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Sentiment analyzer network exception occurred: {e}")
+        return None
     except Exception as err:
-        print(f"Unexpected {err=}, {type(err)=}")
-        print("Network exception occurred")
+        print(f"Unexpected error: {err}")
+        return None
+
 
 def post_review(data_dict):
-    request_url = backend_url+"/insert_review"
+    """
+    Posts a review to the backend service.
+    """
+    request_url = backend_url + "/insert_review"
     try:
-        response = requests.post(request_url,json=data_dict)
-        print(response.json())
+        response = requests.post(request_url, json=data_dict, timeout=5)
+        response.raise_for_status()
+        print(f"Posted review response: {response.json()}")
         return response.json()
-    except:
-        print("Network exception occurred")
+    except requests.exceptions.RequestException as e:
+        print(f"Network exception occurred during post: {e}")
+        return None
+        
