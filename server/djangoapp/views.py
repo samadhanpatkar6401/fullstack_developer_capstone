@@ -10,9 +10,8 @@ from .restapis import get_request, analyze_review_sentiments, post_review
 
 # Models for Cars API
 from .models import CarMake, CarModel
-from .populate import initiate   # Used to auto-populate car data if empty
+from .populate import initiate  # Used to auto-populate car data if empty
 
-# Logger
 logger = logging.getLogger(__name__)
 
 
@@ -34,15 +33,21 @@ def get_cars(request):
         initiate()
 
     car_models = CarModel.objects.select_related("car_make")
-    cars = [{"CarModel": cm.name, "CarMake": cm.car_make.name} for cm in car_models]
+    cars = [
+        {"CarModel": cm.name, "CarMake": cm.car_make.name}
+        for cm in car_models
+    ]
     return JsonResponse({"CarModels": cars})
 
 
 # ---------------------- AUTH: LOGIN ---------------------- #
-@csrf_exempt   # ⚠️ Use CSRF tokens in production
+@csrf_exempt  # ⚠️ Use CSRF tokens in production
 def login_user(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+        return JsonResponse(
+            {"error": "Only POST method is allowed"},
+            status=405
+        )
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -52,16 +57,22 @@ def login_user(request):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     if not username or not password:
-        return JsonResponse({"error": "Username and password required"}, status=400)
+        return JsonResponse(
+            {"error": "Username and password required"},
+            status=400
+        )
 
     user = authenticate(username=username, password=password)
     if user:
         login(request, user)
-        logger.info(f"User '{username}' logged in successfully.")
+        logger.info("User '%s' logged in successfully.", username)
         return JsonResponse({"userName": username, "status": "Authenticated"})
-    else:
-        logger.warning(f"Failed login attempt for username '{username}'.")
-        return JsonResponse({"userName": username, "status": "Failed"}, status=401)
+
+    logger.warning("Failed login attempt for username '%s'.", username)
+    return JsonResponse(
+        {"userName": username, "status": "Failed"},
+        status=401
+    )
 
 
 # ---------------------- AUTH: LOGOUT ---------------------- #
@@ -76,7 +87,10 @@ def logout_request(request):
 @csrf_exempt
 def registration(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST method is allowed"}, status=405)
+        return JsonResponse(
+            {"error": "Only POST method is allowed"},
+            status=405
+        )
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -87,7 +101,10 @@ def registration(request):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     if not username or not password:
-        return JsonResponse({"error": "Username and password are required"}, status=400)
+        return JsonResponse(
+            {"error": "Username and password are required"},
+            status=400
+        )
 
     if User.objects.filter(username=username).exists():
         return JsonResponse({"error": "Username already exists"}, status=400)
@@ -95,9 +112,9 @@ def registration(request):
     user = User.objects.create_user(
         username=username,
         password=password,
-        email=email if email else ""
+        email=email or ""
     )
-    logger.info(f"New user registered: {username}")
+    logger.info("New user registered: %s", username)
     return JsonResponse({"userName": user.username, "status": "Registered"})
 
 
@@ -108,15 +125,16 @@ def get_dealerships(request, state="All"):
     - state="All" -> fetch all dealers
     - state="XX"  -> fetch dealers for a given state code
     """
-    endpoint = "/fetchDealers" if state == "All" else f"/fetchDealers/{state}"
+    if state == "All":
+        endpoint = "/fetchDealers"
+    else:
+        endpoint = f"/fetchDealers/{state}"
     dealerships = get_request(endpoint)
     return JsonResponse({"status": 200, "dealers": dealerships})
 
 
 def get_dealer_details(request, dealer_id):
-    """
-    Return details for a specific dealer.
-    """
+    """Return details for a specific dealer."""
     if dealer_id:
         endpoint = f"/fetchDealer/{dealer_id}"
         dealership = get_request(endpoint)
@@ -133,11 +151,19 @@ def get_dealer_reviews(request, dealer_id):
         reviews = get_request(endpoint)
 
         if reviews is None:
-            return JsonResponse({"status": 500, "message": "Failed to fetch reviews from external service."})
+            return JsonResponse({
+                "status": 500,
+                "message": "Failed to fetch reviews from external service."
+            })
 
         for review_detail in reviews:
-            response = analyze_review_sentiments(review_detail.get("review", ""))
-            review_detail["sentiment"] = response.get("sentiment", "neutral") if response else "neutral"
+            response = analyze_review_sentiments(
+                review_detail.get("review", "")
+            )
+            review_detail["sentiment"] = (
+                response.get("sentiment", "neutral")
+                if response else "neutral"
+            )
 
         return JsonResponse({"status": 200, "reviews": reviews})
     return JsonResponse({"status": 400, "message": "Bad Request"})
@@ -154,8 +180,11 @@ def add_review(request):
             data = json.loads(request.body.decode("utf-8"))
             post_review(data)
             return JsonResponse({"status": 200})
-        except Exception as e:
-            logger.error(f"Error posting review: {e}")
-            return JsonResponse({"status": 401, "message": "Error in posting review"})
-    else:
-        return JsonResponse({"status": 403, "message": "Unauthorized"})
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Error posting review: %s", exc)
+            return JsonResponse({
+                "status": 401,
+                "message": "Error in posting review"
+            })
+    return JsonResponse({"status": 403, "message": "Unauthorized"})
+    

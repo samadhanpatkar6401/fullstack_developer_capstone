@@ -160,9 +160,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Additional directories Django will look for static files
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "frontend/build"),         # React build root
-    os.path.join(BASE_DIR, "frontend/build/static"),  # JS/CSS assets
-    os.path.join(BASE_DIR, "frontend/static"),        # Extra static files
+    # React build root
+    os.path.join(BASE_DIR, "frontend/build"),
+    # JS/CSS assets
+    os.path.join(BASE_DIR, "frontend/build/static"),
+    # Extra static files
+    os.path.join(BASE_DIR, "frontend/static"),
 ]
 
 MEDIA_URL = "/media/"
