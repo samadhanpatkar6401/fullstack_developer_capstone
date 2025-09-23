@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = []
@@ -26,7 +25,10 @@ class Migration(migrations.Migration):
                 ),
                 ("name", models.CharField(max_length=100)),
                 ("description", models.TextField()),
-        ("country", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "country",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
                 ("founded_year", models.IntegerField(blank=True, null=True)),
             ],
         ),
